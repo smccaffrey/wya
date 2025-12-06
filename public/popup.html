@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendar Availability</title>
+  <style>
+    body {
+      width: 450px;
+      min-height: 600px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0 0 16px 0;
+      color: #333;
+    }
+
+    .settings-section {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+
+    .settings-section h2 {
+      font-size: 14px;
+      margin: 0 0 12px 0;
+      color: #666;
+      font-weight: 600;
+    }
+
+    .setting-row {
+      margin-bottom: 12px;
+    }
+
+    .setting-row:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 4px;
+      color: #555;
+      font-size: 13px;
+    }
+
+    input[type="number"],
+    input[type="date"] {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+    }
+
+    .checkbox-item input {
+      margin-right: 6px;
+    }
+
+    .checkbox-item label {
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    button {
+      flex: 1;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .btn-primary {
+      background: #1a73e8;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #1557b0;
+    }
+
+    .btn-secondary {
+      background: #e8e8e8;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #d8d8d8;
+    }
+
+    .btn-primary:disabled,
+    .btn-secondary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #availability-output {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    #availability-output.empty {
+      color: #999;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .availability-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .availability-list li {
+      padding: 6px 0;
+      color: #333;
+      line-height: 1.4;
+    }
+
+    .status-message {
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+
+    .status-message.error {
+      background: #fdecea;
+      color: #c5221f;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status-message.success {
+      background: #e6f4ea;
+      color: #137333;
+      border: 1px solid #c6e1c6;
+    }
+
+    .status-message.info {
+      background: #e8f0fe;
+      color: #1967d2;
+      border: 1px solid #d2e3fc;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 24px;
+      color: #666;
+    }
+
+    .date-range-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📅 Calendar Availability</h1>
+
+  <div id="status-container"></div>
+
+  <div id="not-calendar-section" class="hidden">
+    <div class="status-message info">
+      Please open Google Calendar to use this extension.
+    </div>
+    <button id="open-calendar-button" class="btn-primary">Open Google Calendar</button>
+  </div>
+
+  <div id="main-content" class="hidden">
+    <div class="settings-section">
+      <h2>⚙️ Settings</h2>
+      
+      <div class="setting-row date-range-row">
+        <div>
+          <label for="start-date">Start Date</label>
+          <input type="date" id="start-date" />
+        </div>
+        <div>
+          <label for="end-date">End Date</label>
+          <input type="date" id="end-date" />
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <label for="meeting-length">Minimum Meeting Length (minutes)</label>
+        <input type="number" id="meeting-length" min="15" step="15" value="30" />
+      </div>
+
+      <div class="setting-row">
+        <label for="work-start">Work Day Start</label>
+        <input type="time" id="work-start" value="09:00" />
+      </div>
+
+      <div class="setting-row">
+        <label for="work-end">Work Day End</label>
+        <input type="time" id="work-end" value="17:00" />
+      </div>
+
+      <div class="setting-row">
+        <label>Exclude Days</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="exclude-sunday" value="0" checked>
+            <label for="exclude-sunday">Sunday</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="exclude-monday" value="1">
+            <label for="exclude-monday">Monday</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="exclude-tuesday" value="2">
+            <label for="exclude-tuesday">Tuesday</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="exclude-wednesday" value="3">
+            <label for="exclude-wednesday">Wednesday</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="exclude-thursday" value="4">
+            <label for="exclude-thursday">Thursday</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="exclude-friday" value="5">
+            <label for="exclude-friday">Friday</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="exclude-saturday" value="6" checked>
+            <label for="exclude-saturday">Saturday</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button id="generate-button" class="btn-primary">Generate Availability</button>
+      <button id="copy-button" class="btn-secondary" disabled>Copy to Clipboard</button>
+    </div>
+
+    <div id="availability-output" class="empty">
+      Click "Generate Availability" to see your free time slots
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
