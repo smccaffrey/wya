@@ -2,6 +2,13 @@
 
 A simple Chrome extension that generates formatted calendar availability from Google Calendar by reading directly from the calendar page - **no OAuth setup required!**
 
+
+![Extension Screenshot](examples/image1.png)
+
+
+![Extension Screenshot](examples/image2.png)
+
+
 ## Features
 
 - 📅 **Direct Calendar Access** - Works directly on calendar.google.com (no API setup needed!)
